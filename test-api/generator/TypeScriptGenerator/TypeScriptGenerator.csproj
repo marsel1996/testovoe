@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NSwag.MSBuild" Version="13.13.2">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\test-api\test-api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="nswag.json">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+  <Target Name="NSwag" BeforeTargets="AfterBuild" Condition="'$(TF_BUILD)'!='True'">
+    <Copy SourceFiles="@(ReferencePath)" DestinationFolder="$(OutDir)References"/>
+    <Exec ConsoleToMSBuild="true" ContinueOnError="true" Command="$(NSwagExe_Net50) run nswag.json /variables:Configuration=$(Configuration),OutDir=$(OutDir)">
+      <Output TaskParameter="ExitCode" PropertyName="NSwagExitCode"/>
+      <Output TaskParameter="ConsoleOutput" PropertyName="NSwagOutput"/>
+    </Exec>
+
+    <Message Text="$(NSwagOutput)" Condition="'$(NSwagExitCode)' == '0'" Importance="low"/>
+    <Error Text="$(NSwagOutput)" Condition="'$(NSwagExitCode)' != '0'"/>
+  </Target>
+</Project>
